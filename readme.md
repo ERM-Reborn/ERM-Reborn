@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/ermlogo.png" alt="ERM Bot Logo">
+  <img src="assets/erm-lite-logo.png" alt="ERM Bot Logo">
 </p>
 
 
@@ -26,6 +26,7 @@ The CC BY-NC-SA license requires the following elements:
 - SA: Adaptations must be licensed under the same terms
 
 [![CodeFactor](https://www.codefactor.io/repository/github/ar-cyber/erm/badge)](https://www.codefactor.io/repository/github/ar-cyber/erm)
+
 
 
 
