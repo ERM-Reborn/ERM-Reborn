@@ -1,34 +1,33 @@
-# ERM
-This is a copy of ERM's source for anyone to self host it during the ERM outage
-
-## About the outage
-Recently, a user apart of ERM's dev team attempted to remotely shutdown ERM. The user was quickly caught and was banned, and the bot token was reset so ERM could not be used. The problem is that only the owner of the bot (Mikey) has access to the source code and the capability to reset the bot's token, and Mikey has been unresponsive for about a month. Therefore, the bot is not capable to run.
-
-## How do I install this version of erm?
-1. Make sure you have a stable internet connect and [Python](https://python.org) (with pip) installed before you continue
-2. Create an venv for your Python bot to run in to avoid damaging system dependecies: `python -m venv .venv`. <br>
-   On Linux & MacOS, to initate the venv, run `source .venv/bin/activate` <br>
-   On Windows, to initiate the venv, run `.venv\Scripts\activate` **in a terminal**
-3. Run `pip install -r requirements.txt` to install the dependencies required for ERM to run
-4. Fill out the `.env.template` file and then rename it to `.env`.
-3.1. Please ensure that **ALL** the intents are enabled for the bot or it will not run.
-5. Run `python main.py` to execute the bot. 
+<p align="center">
+  <img src="assets/ermlogo.png" alt="ERM Bot Logo">
+</p>
 
 
-## Patched items:
-1. The Authorization and User-Agent headers were removed due to the bot failing to read API keys if they were on
-2. Fixed the unavailability of autocomplete in `/punish`
-3. Fixed the issues with `/duty manage` where the embed would not update, and roles would not be assigned.
-4. Allowed global sync regardless of what environment
-5. Disabled Jishaku (DO NOT RE-ENABLE IT)
-6. Added staff request configuration (it was omitted for some reason)
+<h1 align="center">ERM.lite | Emergency Response Management Lite</h1>
+
+<p align="center">ERM.lite is a bot that is an extension of the source of ERM, but stripped of the web interface .</p> 
+
+## Essential Links
+- [Bot Invitation](https://discord.com/oauth2/authorize?client_id=1425751544728518716&permissions=8&integration_type=0&scope=bot+applications.commands)
+- [Support Server](https://discord.com/vBdnMbkMHG)
+- [Old ERM repository](https://github.com/mikeyerm/ERM)
+  
+ERM by Mikeyerm, licensed under CC BY-NC-SA 3.0
+This version is unrelated to ERM.
+
+## Licensing
+ERM CE is licensed under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) license. This license allows for the copy, distribution, and creation of adaptations of the material for non-commercial purposes, as long as proper attribution is given to the original creator and any adaptations are licensed under the same terms.
+
+[![License](https://licensebuttons.net/l/by-nc-sa/3.0/88x31.png)](https://top.gg/bot/780386584636538880)
+
+The CC BY-NC-SA license requires the following elements:
+- BY: Credit must be given to the original creator
+- NC: The material can only be used for non-commercial purposes
+- SA: Adaptations must be licensed under the same terms
+
+[![CodeFactor](https://www.codefactor.io/repository/github/ar-cyber/erm/badge)](https://www.codefactor.io/repository/github/ar-cyber/erm)
 
 
-## Extra information
-
-| Item | Notes |
-|------|-------|
-| Error: WEATHER_SERVICE_URL not defined | Ignore this. It is not required and does not impact the bot's functionality |
 
 
 
