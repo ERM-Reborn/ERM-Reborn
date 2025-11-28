@@ -1,5 +1,3 @@
-# DO NOT RUN ANY PREVIOUS VERSIONS OF THIS SCRIPT. THERE HAVE BEEN SECURITY VULNERABILITES PATCHED THAT COULD ALLOW BAD ACTORS INTO YOUR COMPUTER.
-
 # ERM
 This is a copy of ERM's source for anyone to self host it during the ERM outage
 
@@ -28,5 +26,6 @@ Recently, a user apart of ERM's dev team attempted to remotely shutdown ERM. The
 | Item | Notes |
 |------|-------|
 | Error: WEATHER_SERVICE_URL not defined | Ignore this. It is not required and does not impact the bot's functionality |
+
 
 
