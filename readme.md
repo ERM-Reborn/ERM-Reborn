@@ -6,10 +6,13 @@ Recently, a user apart of ERM's dev team attempted to remotely shutdown ERM. The
 
 ## How do I install this version of erm?
 1. Make sure you have a stable internet connect and [Python](https://python.org) (with pip) installed before you continue
-2. Run `pip install -r requirements.txt` to install the dependencies required for ERM to run
-3. Fill out the .env.template file and then rename it to .env.
+2. Create an venv for your Python bot to run in to avoid damaging system dependecies: `python -m venv .venv`. <br>
+   On Linux & MacOS, to initate the venv, run `source .venv/bin/activate` <br>
+   On Windows, to initiate the venv, run `.venv\Scripts\activate` **in a terminal**
+3. Run `pip install -r requirements.txt` to install the dependencies required for ERM to run
+4. Fill out the `.env.template` file and then rename it to `.env`.
 3.1. Please ensure that **ALL** the intents are enabled for the bot or it will not run.
-4. Run `python main.py` to execute the bot. 
+5. Run `python main.py` to execute the bot. 
 
 
 ## Patched items:
@@ -26,6 +29,7 @@ Recently, a user apart of ERM's dev team attempted to remotely shutdown ERM. The
 | Item | Notes |
 |------|-------|
 | Error: WEATHER_SERVICE_URL not defined | Ignore this. It is not required and does not impact the bot's functionality |
+
 
 
 
