@@ -12,11 +12,11 @@
 - [Support Server](https://discord.com/vBdnMbkMHG)
 - [Old ERM repository](https://github.com/mikeyerm/ERM)
   
-ERM by Mikeyerm, licensed under CC BY-NC-SA 3.0
+Licensed under CC BY-NC-SA 3.0<br>
 This version is unrelated to ERM.
 
 ## Licensing
-ERM CE is licensed under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) license. This license allows for the copy, distribution, and creation of adaptations of the material for non-commercial purposes, as long as proper attribution is given to the original creator and any adaptations are licensed under the same terms.<br>
+ERM.lite is licensed under the Attribution-NonCommercial-ShareAlike (CC BY-NC-SA) license. This license allows for the copy, distribution, and creation of adaptations of the material for non-commercial purposes, as long as proper attribution is given to the original creator and any adaptations are licensed under the same terms.<br>
 ![License](https://licensebuttons.net/l/by-nc-sa/3.0/88x31.png)
 <!-- [![License](https://licensebuttons.net/l/by-nc-sa/3.0/88x31.png)](https://top.gg/bot/780386584636538880) -->
 
@@ -27,6 +27,10 @@ The CC BY-NC-SA license requires the following elements:
 
 [![CodeFactor](https://www.codefactor.io/repository/github/ar-cyber/erm.lite/badge)](https://www.codefactor.io/repository/github/ar-cyber/erm.lite)
 
+## Credits
+- [Mikey](https://github.com/mikeywhiston) for creating ERM
+- [Noah](https://github.com/NoahCxrest) for creating the APIs and Maple County integrations
+- The Police Roleplay Community for providing the PRC API
 
 
 
