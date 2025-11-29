@@ -714,8 +714,8 @@ class LinkPathwayMenu(discord.ui.View):
     # When the confirm button is pressed, set the inner value to `True` and
     # stop the View from listening to more input.
     # We also send the user an ephemeral message that we're confirming their choice.
-    @discord.ui.button(label="ERM", style=discord.ButtonStyle.secondary)
-    async def ERM(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="ERM.lite", style=discord.ButtonStyle.secondary)
+    async def ERMlite(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user_id:
             await interaction.response.defer(ephemeral=True, thinking=True)
             await generalised_interaction_check_failure(interaction.followup)
@@ -1593,7 +1593,7 @@ class CustomCommandModification(discord.ui.View):
         return await interaction.response.send_message(
             embed=discord.Embed(
                 description=(
-                    "With **ERM Custom Commands**, you can use custom variables to adapt to the current circumstances when the command is ran.\n"
+                    "With **ERM.lite Custom Commands**, you can use custom variables to adapt to the current circumstances when the command is ran.\n"
                     "`{user}` - Mention of the person using the command.\n"
                     "`{username}` - Name of the person using the command.\n"
                     "`{display_name}` - Display name of the person using the command.\n"
@@ -3901,7 +3901,7 @@ class ActionCreationToolkit(discord.ui.View):
             "Delay",
             "Add Role",
             "Remove Role",
-            "Execute ERM Command"
+            "Execute ERM.lite Command"
         ]
 
         extras = ["Remove Last Integration"]
@@ -4060,7 +4060,7 @@ class ActionCreationToolkit(discord.ui.View):
             "Delay": 1,
             "Add Role": 1,
             "Remove Role": 1,
-            "Execute ERM Command": 1,
+            "Execute ERM.lite Command": 1,
         }
         if not correspondents[button_name]:
             msg = interaction.message
@@ -4095,7 +4095,7 @@ class ActionCreationToolkit(discord.ui.View):
                         "Delay": 6,
                         "Add Role": 7,
                         "Remove Role": 8,
-                        "Execute ERM Command": 9
+                        "Execute ERM.lite Command": 9
                     }[button_name],
                     "ExtraInformation": None,
                 }
@@ -4120,7 +4120,7 @@ class ActionCreationToolkit(discord.ui.View):
                 "Delay": ["Time (Seconds)", 1],
                 "Add Role": ["Role ID", 0],
                 "Remove Role": ["Role ID", 0],
-                "Execute ERM Command": ["Command (without prefix)", 1],
+                "Execute ERM.lite Command": ["Command (without prefix)", 1],
             }
 
             view = CustomModalView(
@@ -4224,7 +4224,7 @@ class ActionCreationToolkit(discord.ui.View):
                         "Delay": 6,
                         "Add Role": 7,
                         "Remove Role": 8,
-                        "Execute ERM Command": 9
+                        "Execute ERM.lite Command": 9
                     }[button_name],
                     "ExtraInformation": provided_information,
                 }
@@ -6690,7 +6690,7 @@ class ERMCommandLog(AssociationConfigurationView):
 
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
-        placeholder="ERM Log Channel",
+        placeholder="ERM.lite Log Channel",
         row=0,
         max_values=1,
         min_values=0,
@@ -6717,7 +6717,7 @@ class ERMCommandLog(AssociationConfigurationView):
             self.bot,
             interaction.guild,
             interaction.user,
-            f"ERM Log Channel Set: <#{select.values[0].id}>",
+            f"ERM.lite Log Channel Set: <#{select.values[0].id}>",
         )
 
 
@@ -8990,7 +8990,7 @@ class ERLCIntegrationConfiguration(AssociationConfigurationView):
 
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    @discord.ui.button(label="Remote ERM Commands", row=3)
+    @discord.ui.button(label="Remote ERM.lite Commands", row=3)
     async def remote_commands(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
@@ -9731,7 +9731,7 @@ class ERLCStats(discord.ui.View):
         if interaction.user.id == self.user_id:
             embed = discord.Embed(
                 description=(
-                    "With **ERM Statistics Check**, you can use custom variables to adapt to the current circumstances when the statistics is updated.\n"
+                    "With **ERM.lite Statistics Check**, you can use custom variables to adapt to the current circumstances when the statistics is updated.\n"
                     "`{user}` - Mention of the person using the command.\n"
                     "`{username}` - Name of the person using the command.\n"
                     "`{display_name}` - Display name of the person using the command.\n"
@@ -12547,7 +12547,7 @@ class AccountLinkingMenu(discord.ui.View):
             "Sock"
         ]
 
-        full_string = f"ERM {' '.join([random.choice(available_string_subsets) for _ in range(6)])}"
+        full_string = f"ERM.lite {' '.join([random.choice(available_string_subsets) for _ in range(6)])}"
 
         if msg:
             await msg.edit(

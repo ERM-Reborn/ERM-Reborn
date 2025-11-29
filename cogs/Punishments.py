@@ -121,7 +121,7 @@ class Punishments(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         roblox_user = await get_roblox_by_username(user, self.bot, ctx)
@@ -669,7 +669,7 @@ class Punishments(commands.Cog):
         if self.bot.punishments_disabled is True:
             return await failure_embed(
                 ctx,
-                "This command is currently disabled as ERM is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
+                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
             )
 
         bot = self.bot
@@ -992,7 +992,7 @@ class Punishments(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         try:

@@ -75,7 +75,7 @@ class ERLC(commands.Cog):
     async def mc(self, ctx: commands.Context):
         pass
 
-    @mc.command(name="link", description="Link your Maple County server with ERM!")
+    @mc.command(name="link", description="Link your Maple County server with ERM.lite!")
     @is_management()
     async def mc_link(self, ctx: commands.Context, *, server_name: str):
         # get the linked roblox user
@@ -106,7 +106,7 @@ class ERLC(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Server Not Found",
-                    description="We could not find a server you own under the server name provided. Make sure you are linked with ERM by running `/link` in any server.",
+                    description="We could not find a server you own under the server name provided. Make sure you are linked with ERM.lite by running `/link` in any server.",
                     color=BLANK_COLOR,
                 )
             )
@@ -940,7 +940,7 @@ class ERLC(commands.Cog):
             )
 
     @server.command(
-        name="message", description="Send a Message to your ER:LC server with ERM!"
+        name="message", description="Send a Message to your ER:LC server with ERM.lite!"
     )
     @is_staff()
     @is_server_linked()
@@ -968,7 +968,7 @@ class ERLC(commands.Cog):
             await self.secure_logging(guild_id, ctx.author.id, "Message", message)
 
     @server.command(
-        name="hint", description="Send a Hint to your ER:LC server with ERM!"
+        name="hint", description="Send a Hint to your ER:LC server with ERM.lite!"
     )
     @is_staff()
     @is_server_linked()
@@ -997,7 +997,7 @@ class ERLC(commands.Cog):
 
     @server.command(
         name="link",
-        description="Link your ER:LC server with ERM!",
+        description="Link your ER:LC server with ERM.lite!",
         extras={"ignoreDefer": True},
     )
     @is_management()
@@ -1038,7 +1038,7 @@ class ERLC(commands.Cog):
 
     @server.command(
         name="unlink",
-        description="Unlink your ER:LC server from ERM!",
+        description="Unlink your ER:LC server from ERM.lite!",
     )
     @is_management()
     @is_server_linked()
@@ -1048,7 +1048,7 @@ class ERLC(commands.Cog):
         await ctx.send(
             embed=discord.Embed(
                 title=f"{self.bot.emoji_controller.get_emoji('success')} Successfully Unlinked",
-                description="I have unlinked your ER:LC server from ERM.",
+                description="I have unlinked your ER:LC server from ERM.lite.",
                 color=GREEN_COLOR,
             )
         )

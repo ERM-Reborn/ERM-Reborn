@@ -87,7 +87,7 @@ class CustomDebugCog(*OPTIONAL_FEATURES, *STANDARD_FEATURES):
                 name=f"{ctx.author.name}#{ctx.author.discriminator}",
                 icon_url=ctx.author.display_avatar.url,
             )
-            embed.set_footer(text="️️©️ ERM Systems - Jishaku Logging Systems")
+            embed.set_footer(text="️️©️ ERM.lite Systems - Jishaku Logging Systems")
             try:
                 await selected_webhook.send(embed=embed)
             except ValueError:

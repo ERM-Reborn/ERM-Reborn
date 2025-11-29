@@ -47,7 +47,7 @@ class WarningItem:
 
 class Warnings(Document):
     """
-    Also known as the punishment module, this is used for intermediary methods for the Warnings database <-> ERM.
+    Also known as the punishment module, this is used for intermediary methods for the Warnings database <-> ERM.lite.
     """
 
     def __init__(self, bot):

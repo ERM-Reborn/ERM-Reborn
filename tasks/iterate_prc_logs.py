@@ -959,7 +959,7 @@ async def handle_kick_timer(bot, settings, guild_id, player_logs, command_logs):
                 if user_data:
                     await bot.punishments.insert_warning(
                         staff_id=978662093408591912,
-                        staff_name="ERM Systems",
+                        staff_name="ERM.lite Systems",
                         user_id=user_data.user_id,
                         user_name=username,
                         guild_id=guild_id,

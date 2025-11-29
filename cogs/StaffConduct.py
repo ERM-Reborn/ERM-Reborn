@@ -28,7 +28,7 @@ class StaffConduct(commands.Cog):
         self.bot = bot
 
     async def check_settings(self, ctx: commands.Context):
-        error_text = "<:ERMClose:1111101633389146223> **{},** this server isn't setup with ERM! Please run `/setup` to setup the bot before trying to manage infractions".format(
+        error_text = "<:ERMClose:1111101633389146223> **{},** this server isn't setup with ERM.lite! Please run `/setup` to setup the bot before trying to manage infractions".format(
             ctx.author.name
         )
         guild_settings = await self.bot.settings.find_by_id(ctx.guild.id)
@@ -51,12 +51,11 @@ class StaffConduct(commands.Cog):
     @is_management()
     async def infraction(self, ctx: commands.Context):
         pass
-
-    @infraction.command(
+    '''    @infraction.command(
         name="manage",
         description="Manage staff infractions, staff conduct, and custom integrations!",
         extras={"category": "Staff Conduct"},
-    )
+    )'''
     @is_management()
     async def manage(self, ctx: commands.Context):
         bot = self.bot
@@ -90,7 +89,7 @@ class StaffConduct(commands.Cog):
             )
             embed.add_field(
                 name="<:ERMList:1111099396990435428> What is Staff Conduct?",
-                value=">>> Staff Conduct is a module within ERM which allows for infractions on your Staff team. Not only does it allow for manual punishments and infractions to others to be expanded and customised, it also allows for automatic punishments for those that don't meet activity requirements, integrating with other ERM modules.",
+                value=">>> Staff Conduct is a module within ERM.lite which allows for infractions on your Staff team. Not only does it allow for manual punishments and infractions to others to be expanded and customised, it also allows for automatic punishments for those that don't meet activity requirements, integrating with other ERM.lite modules.",
                 inline=False,
             )
             embed.add_field(
@@ -100,7 +99,7 @@ class StaffConduct(commands.Cog):
             )
             embed.add_field(
                 name="<:ERMList:1111099396990435428> If I have a Strike 1/2/3 system, do I have them as separate types?",
-                value=">>> In the case where you have a counting infraction system, you can tell ERM to count the strikes automatically! It will then take the according actions that correspond with that infraction amount.",
+                value=">>> In the case where you have a counting infraction system, you can tell ERM.lite to count the strikes automatically! It will then take the according actions that correspond with that infraction amount.",
                 inline=False,
             )
             embed.set_footer(

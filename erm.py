@@ -255,8 +255,9 @@ class Bot(commands.AutoShardedBot):
             # await bot.load_extension("cogs.Jishaku")
             await bot.load_extension("utils.hot_reload")
             # await bot.load_extension('utils.server')
-
+            
             await self.tree.sync()
+            logging.info("Synced commands")
             bot.is_synced = True
 
             # we do this so the bot can get a cache of things before we spam discord with fetches
@@ -280,6 +281,10 @@ class Bot(commands.AutoShardedBot):
 
     async def start_tasks(self):
         logging.info("Starting tasks...")
+        if self.environment != "CUSTOM":
+            change_status.start(bot)
+        logging.info("Starting the Change Status task...")
+        await asyncio.sleep(30)
         check_reminders.start(bot)
         logging.info("Startng the Check Reminders task...")
         await asyncio.sleep(30)
@@ -300,10 +305,7 @@ class Bot(commands.AutoShardedBot):
         await asyncio.sleep(30)
         check_whitelisted_car.start(bot)
         logging.info("Starting the Check Whitelisted Car task...")
-        if self.environment != "CUSTOM":
-            await asyncio.sleep(30)
-            change_status.start(bot)
-        logging.info("Starting the Change Status task...")
+
         await asyncio.sleep(30)
         process_scheduled_pms.start(bot)
         logging.info("Starting the Process Scheduled PMs task...")
@@ -626,7 +628,7 @@ elif environment == "ALPHA":
         bot_token = config("ALPHA_BOT_TOKEN")
     except decouple.UndefinedValueError:
         bot_token = ""
-    logging.info("Using ERM V4 Alpha token...")
+    logging.info("Using ERM.lite V4 Alpha token...")
 elif environment == "CUSTOM":
     bot_token = config("CUSTOM_BOT_TOKEN")
     logging.info("Using custom bot token...")

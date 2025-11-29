@@ -36,7 +36,7 @@ class Search(commands.Cog):
     @commands.hybrid_command(
         name="mywarnings",
         aliases=["mymoderations", "mypunishments", "moderations"],
-        description="Lookup your punishments with ERM.",
+        description="Lookup your punishments with ERM.lite.",
         extras={"category": "Search"},
         with_app_command=True,
     )
@@ -52,7 +52,7 @@ class Search(commands.Cog):
         if self.bot.punishments_disabled is True:
             return await failure_embed(
                 ctx,
-                "This command is currently disabled as ERM is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
+                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
             )
 
         bot = self.bot
@@ -85,13 +85,13 @@ class Search(commands.Cog):
         embed_list = [player_information_embed, punishments_embed]
 
         magic_flags = {
-            "ERM Team": 1001972346661384302,
-            "ERM Developer": 1046204873496068176,
-            "ERM Management": 1038597868023447552,
-            "ERM Senior Support": 1028848687927013396,
-            "ERM Support": 1053417531278364713,
-            "ERM Staff": 988055417907200010,
-            "ERM Quality Assurance": 1306431506914218067,
+            "ERM.lite Team": 1001972346661384302,
+            "ERM.lite Developer": 1046204873496068176,
+            "ERM.lite Management": 1038597868023447552,
+            "ERM.lite Senior Support": 1028848687927013396,
+            "ERM.lite Support": 1053417531278364713,
+            "ERM.lite Staff": 988055417907200010,
+            "ERM.lite Quality Assurance": 1306431506914218067,
         }
 
         magic_flags_reverse = {
@@ -118,7 +118,7 @@ class Search(commands.Cog):
                     if role.id in magic_flags_reverse
                 )
         elif member and bot.environment == "CUSTOM":
-            applied_flags.update(["ERM Staff"])
+            applied_flags.update(["ERM.lite Staff"])
 
         applied_flags = list(applied_flags)
         if (
@@ -278,7 +278,7 @@ class Search(commands.Cog):
         if self.bot.punishments_disabled is True:
             return await failure_embed(
                 ctx,
-                "This command is currently disabled as ERM is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
+                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance. It will be returned shortly.",
             )
 
         bot = self.bot
@@ -334,13 +334,13 @@ class Search(commands.Cog):
         ] or ["NoAlerts"]
 
         magic_flags = {
-            "ERM Team": 1001972346661384302,
-            "ERM Developer": 1046204873496068176,
-            "ERM Management": 1038597868023447552,
-            "ERM Senior Support": 1028848687927013396,
-            "ERM Support": 1053417531278364713,
-            "ERM Staff": 988055417907200010,
-            "ERM Quality Assurance": 1306431506914218067,
+            "ERM.lite Team": 1001972346661384302,
+            "ERM.lite Developer": 1046204873496068176,
+            "ERM.lite Management": 1038597868023447552,
+            "ERM.lite Senior Support": 1028848687927013396,
+            "ERM.lite Support": 1053417531278364713,
+            "ERM.lite Staff": 988055417907200010,
+            "ERM.lite Quality Assurance": 1306431506914218067,
         }
 
         magic_flags_reverse = {
@@ -367,7 +367,7 @@ class Search(commands.Cog):
                     if role.id in magic_flags_reverse
                 )
         elif member and bot.environment == "CUSTOM":
-            applied_flags.update(["ERM Staff"])
+            applied_flags.update(["ERM.lite Staff"])
 
         applied_flags = list(applied_flags)
         if (

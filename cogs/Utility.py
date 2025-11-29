@@ -22,18 +22,6 @@ class Utility(commands.Cog):
         self.bot = bot
 
 
-    @commands.hybrid_group(
-        name="import",
-        description="Internal Use Command - import data from the recent outage.",
-        extras={"category": "Utility"},
-    )
-    @is_staff()
-    async def import_group(self, ctx: commands.Context):
-        pass
-
-    
-
-
     @commands.hybrid_command(
         name="staff_sync",
         description="Internal Use Command, used for connection staff privileged individuals to their Roblox counterparts.",
@@ -116,29 +104,19 @@ class Utility(commands.Cog):
     @commands.hybrid_command(
         name="about",
         aliases=["info"],
-        description="Information about ERM",
+        description="Information about ERM.lite",
         extras={"category": "Utility"},
     )
     async def about(self, ctx):
         # using an embed
         # [**Support Server**](https://discord.gg/5pMmJEYazQ)
         embed = discord.Embed(
-            title="About ERM",
+            title="About ERM.lite",
             color=BLANK_COLOR,
-            description="ERM is the all-in-one approach to game moderation logging, shift logging and more.",
+            description="ERM.lite is the all-in-one approach to game moderation logging, shift logging and more.",
         )
 
-        embed.add_field(
-            name=f"Bot Information",
-            value=(
-                "> **Website:** [View Website](https://ermbot.xyz)\n"
-                # "> **Support:** [Join Server](https://discord.gg/FAC629TzBy)\n"
-                f"> **Invite:** [Invite Bot](https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&permissions=8&scope=bot%20applications.commands)\n"
-                "> **Documentation:** [View Documentation](https://docs.ermbot.xyz)\n"
-                "> **Desktop:** [Download ERM Desktop](https://ermbot.xyz/download)"
-            ),
-            inline=False,
-        )
+
         embed.set_author(
             name=self.bot.user.name,
             icon_url=self.bot.user.display_avatar.url,
