@@ -1282,6 +1282,9 @@ class ManageReminders(discord.ui.View):
             )
 
 
+
+
+
 # Update ManageActions to add Discord Commands
 class ManageActions(discord.ui.View):
     def __init__(self, bot, user_id):
@@ -5747,6 +5750,382 @@ class BasicConfiguration(AssociationConfigurationView):
 #             value="delete"
 #         )
 #     ])
+
+class TicketConfiguration(AssociationConfigurationView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    @discord.ui.select(
+        placeholder="Tickets",
+        row=0,
+        options=[
+            discord.SelectOption(
+                label="Enabled",
+                value="enabled",
+                description="Tickets are enabled.",
+            ),
+            discord.SelectOption(
+                label="Disabled",
+                value="disabled",
+                description="Tickets are disabled.",
+            ),
+        ],
+        max_values=1,
+    )
+    async def ticket_enabled(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
+        value = await self.interaction_check(interaction)
+        if not value:
+            return
+
+        await interaction.response.defer()
+        guild_id = interaction.guild.id
+
+        bot = self.bot
+        sett = await bot.settings.find_by_id(guild_id)
+        if not sett.get("tickets"):
+            sett["tickets"] = {}
+
+        sett["tickets"]["enabled"] = bool(select.values[0] == "enabled")
+        await bot.settings.update_by_id(sett)
+        await config_change_log(
+            self.bot,
+            interaction.guild,
+            interaction.user,
+            f"Tickets {select.values[0]}",
+        )
+        for i in select.options:
+            i.default = False
+    @discord.ui.select(
+        placeholder="Close & Delete",
+        row=1,
+        options=[
+            discord.SelectOption(
+                label="Enabled",
+                value="enabled",
+                description="Close & delete is enabled.",
+            ),
+            discord.SelectOption(
+                label="Disabled",
+                value="disabled",
+                description="Close & delete is disabled.",
+            ),
+        ],
+        max_values=1,
+    )    
+    async def close_delete(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
+        value = await self.interaction_check(interaction)
+        if not value:
+            return
+
+        await interaction.response.defer()
+        guild_id = interaction.guild.id
+
+        bot = self.bot
+        sett = await bot.settings.find_by_id(guild_id)
+        if not sett.get("tickets"):
+            sett["tickets"] = {}
+
+        sett["tickets"]["close_and_delete"] = bool(select.values[0] == "enabled")
+        await bot.settings.update_by_id(sett)
+        await config_change_log(
+            self.bot,
+            interaction.guild,
+            interaction.user,
+            f"Tickets Close And Delete {select.values[0]}",
+        )
+        for i in select.options:
+            i.default = False
+    @discord.ui.button(label="Create a ticket category", row=2)
+    async def more_options(
+        self, interaction: discord.Interaction, button: discord.Button
+    ):
+        val = await self.interaction_check(interaction)
+        if val is False:
+            return
+        sett = await self.bot.settings.find_by_id(interaction.guild.id)
+        if not sett.get("tickets"):
+            return await interaction.response.send_message(embed=discord.Embed(title = "Not enabled", description = "Tickets must be enabled before you create categories."), ephemeral=True)
+        
+        self.modal = CustomModal(
+                f"Create a category",
+                [
+                    (
+                        "name",
+                        discord.ui.Label(
+                            text="Name",
+                            description="What is this category called",
+                            component=discord.ui.TextInput(
+                                required=True,
+                                placeholder="Enter the name here",
+                                max_length=80
+                            )
+                        )
+                    ),
+                    (
+                        "category",
+                        discord.ui.Label(
+                            text = "Category",
+                            description = "What category does this belong to?",
+                            component=discord.ui.TextInput(
+                                required=True,
+                                placeholder="Enter the category ID here",
+                                max_length=20
+                            )
+                        )  
+                    ),
+                    (
+                        "roles",
+                        discord.ui.Label(
+                            text = "Allowed Roles",
+                            description = "Who can access this category?",
+                            component=discord.ui.RoleSelect(
+                                required=True,
+                                min_values=1,
+                                max_values=25
+                            ),
+                            
+                        )
+                    )
+                ],
+            )
+        await interaction.response.send_modal(self.modal)
+        await self.modal.wait()
+        
+        if not sett["tickets"].get("categories"):
+            sett["tickets"]["categories"] = []
+        # Create a new category in the mongo database
+        sett["tickets"]["categories"].append({
+            "id": int(self.modal.category.component.value),
+            "name": self.modal.name.component.value,
+            "roles": [role.id for role in self.modal.roles.component.values]
+        })
+        await self.bot.settings.update_by_id(sett)
+        await config_change_log(
+            self.bot,
+            interaction.guild,
+            interaction.user,
+            f"Tickets Category Created {self.modal.name.component.value}",
+        )
+        await interaction.followup.send(embed=discord.Embed(
+            title = "Success",
+            description = "Successfully created the category"
+        ), ephemeral=True)
+    @discord.ui.button(label = "Edit a category", row=2)
+    async def edit_category(self, interaction: discord.Interaction, button: discord.Button):
+        val = await self.interaction_check(interaction)
+        if val is False:
+            return
+        sett = await self.bot.settings.find_by_id(interaction.guild.id)
+        if not sett.get("tickets"):
+            return await interaction.response.send_message(embed=discord.Embed(title = "Not enabled", description = "Tickets must be enabled before you edit categories."), ephemeral=True)
+        if sett.get("tickets").get('categories', []) == []:
+            return await interaction.response.send_message(embed=discord.Embed(title = "No categories", description = "There are no categories to edit."), ephemeral=True)
+        self.modal = CustomModal(
+                f"Edit a Category",
+                [
+                    (
+                        "category",
+                        discord.ui.Label(
+                            text = "Category",
+                            description = "Select the category.",
+                            component=discord.ui.Select(
+                                required=True,
+                                min_values=1,
+                                max_values=1,
+                                options = [
+                                    discord.SelectOption(label=item["name"], value=f"{item["name"]}.{item["id"]}") for item in sett.get("tickets").get('categories', [])
+                                ]
+                            )
+                        )  
+                    ),
+
+                ],
+            )
+        await interaction.response.send_modal(self.modal)
+        await self.modal.wait()
+        embed = discord.Embed(
+            title = "Edit Category",
+            description = (
+                f"You are currently editing {self.modal.category.component.values[0].split(".")[0]}\n\n"
+                "Before clicking buttons to change the category, get a copy of the new ID."
+            )
+        )
+        print(self.modal.category.component.values[0].split("."))
+        view = TicketConfigurationCategory(self.bot, self.modal.category.component.values[0].split("."), interaction.user.id, interaction.guild.id)
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+    @discord.ui.button(label = "Edit ticket message", row=2)
+    async def edit_tick_message(self, interaction: discord.Interaction, button: discord.Button):
+        val = await self.interaction_check(interaction)
+        if val is False:
+            return
+        sett = await self.bot.settings.find_by_id(interaction.guild.id)
+        if not sett.get("tickets"):
+            return await interaction.response.send_message(embed=discord.Embed(title = "Not enabled", description = "Tickets must be enabled before you edit categories."), ephemeral=True)
+        self.modal = CustomModal(
+                f"Edit ticket message",
+                [
+                    (
+                        "name",
+                        discord.ui.Label(
+                            text = "Title",
+                            description = "Enter the title of the assistance panel",
+                            component=discord.ui.TextInput(
+                                required=True,
+                                style=discord.TextStyle.short,
+                                default=sett.get("tickets").get("message_title") if sett.get("tickets").get("message_title") else None
+                            )
+                        )
+                    ),
+                    (
+                        "msg",
+                        discord.ui.Label(
+                            text = "Message",
+                            description = "Edit the embed message when sending the assistance panel (markdown accepted).",
+                            component=discord.ui.TextInput(
+                                required=True,
+                                style=discord.TextStyle.long,
+                                default=sett.get("tickets").get("message_msg") if sett.get("tickets").get("message_msg") else None
+                            )
+                        )  
+                    ),
+
+                ],
+            )
+        
+        await interaction.response.send_modal(self.modal)
+        await self.modal.wait()
+        sett.get("tickets")["message_title"] = self.modal.name.component.value
+        sett.get("tickets")["message_msg"] = self.modal.msg.component.value
+        await self.bot.settings.update_by_id(sett)
+        embed = discord.Embed(
+            title = self.modal.name.component.value,
+            description=self.modal.msg.component.value
+        )
+        await interaction.followup.send("# Assistance panel preview", embed=embed, ephemeral=True)
+class TicketConfigurationCategory(discord.ui.View):
+    def __init__(self, bot, id: list, user_id: int, guild_id: int):
+        self.bot = bot
+        self.user_id = user_id
+        self.guild_id = guild_id
+        self.tid = id
+        super().__init__()
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        if interaction.user.id == self.user_id:
+            return True
+        else:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Not Permitted",
+                    description="You are not permitted to interact with these buttons.",
+                    color=blank_color,
+                ),
+                ephemeral=True,
+            )
+            return False
+    @discord.ui.button(label = "Edit Name")
+    async def edit_name(self, ctx: discord.Interaction, button: discord.Button):
+        val = await self.interaction_check(ctx)
+        if val is False:
+            return
+        sett = await self.bot.settings.find_by_id(ctx.guild.id)
+        self.modal: discord.ui.Modal | CustomModal = CustomModal(
+                f"Edit a Category",
+                [
+                    (
+                        "name",
+                        discord.ui.Label(
+                            text = "Name",
+                            description = "Edit the category name.",
+                            component=discord.ui.TextInput(
+                                required=True,
+                                default=self.tid[0],
+                                max_length=80
+                            )
+                        )  
+                    ),
+
+                ],
+            ) 
+        await ctx.response.send_modal(self.modal)
+        await self.modal.wait()
+        print(self.tid)
+        dict = next(d for i, d in enumerate(sett["tickets"].get("categories")) if d["id"] == int(self.tid[1]))
+        print(dict)
+        dict["name"] = self.modal.name.component.value
+        print(dict["name"])
+        del sett["tickets"].get("categories")[sett["tickets"].get("categories").index(dict)]
+        sett["tickets"].get("categories").append(dict)
+        await self.bot.settings.update_by_id(sett)
+        self.tid = [dict["name"], self.tid[1]]
+        embed = discord.Embed(
+            title = "Edit Category",
+            description = (
+                f"You are currently editing {self.modal.name.component.value}\n\n"
+            )
+        )
+        await ctx.followup.send(embed=discord.Embed(title = "Successfully changed name", description = "The name was changed successfully."))
+        await config_change_log(
+            self.bot,
+            ctx.guild,
+            ctx.user,
+            f"Tickets Category Name Changed {self.tid[0]}",
+        )
+    @discord.ui.button(label = "Delete Category", style=discord.ButtonStyle.danger)
+    async def _del_category(self, ctx: discord.Interaction, button: discord.Button):
+        val = await self.interaction_check(ctx)
+        if val is False:
+            return
+        sett = await self.bot.settings.find_by_id(ctx.guild.id)
+        dct = next(d for i, d in enumerate(sett["tickets"].get("categories")) if d["id"] == int(self.tid[1]) and d["name"] == self.tid[0])
+        del sett["tickets"].get("categories")[sett["tickets"].get("categories").index(dct)]
+        await self.bot.settings.update_by_id(sett)
+        await config_change_log(
+            self.bot,
+            ctx.guild,
+            ctx.user,
+            f"Tickets Category Deleted {self.tid[0]}",
+        )
+        embed = discord.Embed(
+            title = "Category Deleted",
+            description = (
+                f"The category is now deleted"
+            )
+        )
+        await ctx.response.edit_message(embed=embed, view=None)
+
+class TicketDropDown(discord.ui.Select):
+    def __init__(self, bot, ticket_settings: dict):
+        self.bot = bot
+        super().__init__(custom_id = "ticketdropdown_assistance", placeholder = 'Select a ticket category', options = [
+            discord.SelectOption(label = category["name"], value = category["id"], description = f"{category["name"]} ticket.")
+            for category in ticket_settings["categories"]
+        ])
+    async def callback(self, interaction: discord.Interaction):
+        sett = await self.bot.settings.find_by_id(interaction.guild.id)
+        category = next(d for i, d in enumerate(sett["tickets"].get("categories")) if d["id"] == int(self.values[0]))
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+            interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+        }
+        for role in category["roles"]:
+            r = discord.utils.get(interaction.guild.roles, id=int(role))
+            overwrites[r] = discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+        cat = discord.utils.get(interaction.guild.categories, id=category["id"])
+        channel = await interaction.guild.create_text_channel(name = f"ticket-{interaction.user.name}-{random.randint(0,9999)}", overwrites=overwrites, category=cat)
+        await self.bot.tickets.create_ticket(interaction.user.id, channel.id)
+
+        embed = discord.Embed(
+            title = f"{category["name"]} ticket",
+            description = f"Hello, {interaction.user.mention}! Welcome to the {interaction.guild.name} ticketing system. A staff member will assist you shortly."
+        )
+        embed.add_field(name = "Please tell us what you need help with as soon as you can", value = "This will allow us to complete your ticket quicker.")
+        await channel.send(" | ".join(discord.utils.get(interaction.guild.roles, id=id).mention for id in category["roles"]), embed=embed, allowed_mentions=discord.AllowedMentions.all())
+        await interaction.response.send_message(f"Successfully created ticket! You can find it at {channel.mention}!", ephemeral=True)
+
 
 
 class LOAConfiguration(AssociationConfigurationView):

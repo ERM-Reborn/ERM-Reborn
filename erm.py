@@ -46,6 +46,7 @@ from sentry_sdk import push_scope, capture_exception
 from sentry_sdk.integrations.pymongo import PyMongoIntegration
 
 from datamodels.CustomFlags import CustomFlags
+from datamodels.Tickets import Tickets
 from datamodels.ServerKeys import ServerKeys
 from datamodels.ShiftManagement import ShiftManagement
 from datamodels.ActivityNotice import ActivityNotices
@@ -206,6 +207,8 @@ class Bot(commands.AutoShardedBot):
             self.accounts = Accounts(self)
 
             self.whitelabel = Whitelabel(self.mongo["ERMliteProcessing"], "Instances")
+
+            self.tickets = Tickets(self.db, "tickets")
 
             self.roblox = roblox.Client()
             self.prc_api = PRCApiClient(
