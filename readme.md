@@ -12,7 +12,7 @@
 - [Support Server](https://discord.gg/JHwepnxHcf)
 - [Old ERM repository](https://github.com/mikeyerm/ERM)
   
-Licensed under CC BY-NC-SA 3.0<br>
+This code, and all its assets, are licensed under CC BY-NC-SA 3.0<br>
 This version is unrelated to ERM, or other community projects.
 
 ## Licensing
@@ -30,6 +30,7 @@ The CC BY-NC-SA license requires the following elements:
 - [Mikey](https://github.com/mikeywhiston) for creating ERM
 - [Noah](https://github.com/NoahCxrest) for creating the APIs and Maple County integrations
 - The [Police Roleplay Community](https://policeroleplay.community) for providing the PRC API
+
 
 
 
