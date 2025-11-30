@@ -697,7 +697,7 @@ class Configuration(commands.Cog):
                     "Infractions Channel",
                     [
                         discord.utils.get(ctx.guild.channels, id=channel)
-                        if (channel := settings["infractions"].get("channel"))
+                        if (channel := settings.get("infractions", {}).get("channel"))
                             else 0
                     ],
                 ),
