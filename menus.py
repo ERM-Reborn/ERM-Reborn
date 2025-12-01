@@ -8077,7 +8077,7 @@ class StaffRequestOptions(AssociationConfigurationView):
             self.bot,
             interaction.guild,
             interaction.user,
-            f"Staff Requests Permission Level Set: <#{select.values[0].id}>",
+            f"Staff Requests Permission Level Set: {select.values[0]}",
         )
 
     @discord.ui.select(
@@ -8102,13 +8102,13 @@ class StaffRequestOptions(AssociationConfigurationView):
             sett["game_logging"] = {"stafF_requests": {}}
         if not sett.get("game_logging", {}).get("staff_requests"):
             sett["game_logging"]["staff_requests"] = {}
-        sett["game_logging"]["staff_requests"]["mentioned_roles"] = [int(role.values[0].id) for role in select]
+        sett["game_logging"]["staff_requests"]["mentioned_roles"] = [int(role.id) for role in select.values]
         await bot.settings.update_by_id(sett)
         await config_change_log(
             self.bot,
             interaction.guild,
             interaction.user,
-            f"Staff Requests Pinged Roles Set: {" ".join(role.values[0].mention for role in select)}",
+            f"Staff Requests Pinged Roles Set: {" ".join(role.mention for role in select.values)}",
         )
     @discord.ui.select(
         options=[
