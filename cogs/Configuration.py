@@ -29,7 +29,7 @@ from menus import (
     ERMCommandLog,
     WhitelistVehiclesManagement,
     PriorityRequestConfiguration,
-    InfractionsConfiguration
+    SMConfiguration
 )
 from ui.MapleCounty import MapleCountyConfiguration
 from utils.paginators import CustomPage, SelectPagination
@@ -689,7 +689,7 @@ class Configuration(commands.Cog):
             ],
         )
 
-        infractions_view = InfractionsConfiguration(
+        staff_management_view = SMConfiguration(
             bot,
             ctx.author.id,
             [
@@ -698,6 +698,14 @@ class Configuration(commands.Cog):
                     [
                         discord.utils.get(ctx.guild.channels, id=channel)
                         if (channel := settings.get("infractions", {}).get("channel"))
+                            else 0
+                    ],
+                ),
+                (
+                    "Promotions Channel",
+                    [
+                        discord.utils.get(ctx.guild.channels, id=channel)
+                        if (channel := settings.get("promotions", {}).get("channel"))
                             else 0
                     ],
                 ),
@@ -1029,7 +1037,7 @@ class Configuration(commands.Cog):
                 basic_settings_view,
                 loa_configuration_view,
                 shift_management_view,
-                infractions_view,
+                staff_management_view,
                 ra_view,
                 roblox_punishments,
                 security_view,
@@ -1072,10 +1080,15 @@ class Configuration(commands.Cog):
                     color=blank_color,
                 ),
                 discord.Embed(
-                    title="Infractions",
+                    title="Staff Management",
                     description=(
+                        "**What is staff management?** Staff management is a set of modules in order to make adjustments to your staff team. "
+                        "### Infractions"
                         "**What are infractions?** Infractions are moderations for staff, where their rank may be changed, or they are warned or striked.\n\n"
                         "**Infraction channel:** This channel is where infraction notices are sent. Leave blank to disable sending to a channel.\n\n"
+                        "### Promotions"
+                        "**What are promotions?** Promotions are moving a staff member to a role higher than their current one."
+                        "**Promotion channel:** This channel is where promotion messages are sent. Leave blank to disable sending to a channel."
                     ),
                     color=blank_color,
                 ),

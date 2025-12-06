@@ -2853,6 +2853,53 @@ class Infraction(discord.ui.Modal, title="Create Infraction"):
         await interaction.response.defer()
         self.stop()
 
+class Promotion(discord.ui.Modal, title="Create Promotion"):
+    users = discord.ui.Label(
+        text='User',
+        description='Please select the user(s) being promoted.',
+        component=discord.ui.UserSelect(
+            placeholder="Select the users",
+            required=True,
+            min_values=1,
+            max_values=25
+        ),
+    )
+    role = discord.ui.Label(
+        text='New Role',
+        description='Please select from the list of roles below',
+        component=discord.ui.RoleSelect(
+            placeholder="Please select a role",
+            required=True
+        )
+    )
+    reason = discord.ui.Label(
+        text="Reason",
+        description="Please enter a reason for this promotion.",
+        component=discord.ui.TextInput(
+            placeholder="Please enter a reason",
+            style=discord.TextStyle.long,
+            required=True
+        )
+    )
+    notes = discord.ui.Label(
+        text="Notes",
+        description="Please enter notes. These are not compulsory.",
+        component=discord.ui.TextInput(
+            style=discord.TextStyle.long,
+            placeholder="Enter some additional notes.",
+            required=False
+        )
+    )
+    
+    def __init__(self):
+        super().__init__()
+        self.modal_interaction = None
+    
+    async def on_submit(self, interaction):
+        self.modal_interaction = interaction
+        await interaction.response.defer()
+        self.stop()
+
 
 class SetContent(discord.ui.Modal, title="Set Message Content"):
     name = discord.ui.TextInput(
@@ -7028,7 +7075,7 @@ class ShiftConfiguration(AssociationConfigurationView):
                 view=None,
             )
 
-class InfractionsConfiguration(AssociationConfigurationView):
+class SMConfiguration(AssociationConfigurationView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -7040,7 +7087,7 @@ class InfractionsConfiguration(AssociationConfigurationView):
         max_values=1,
         channel_types=[discord.ChannelType.text],
     )
-    async def shift_channel_select(
+    async def inf_channel_select(
         self, interaction: discord.Interaction, select: discord.ui.Select
     ):
         value = await self.interaction_check(interaction)
@@ -7052,6 +7099,8 @@ class InfractionsConfiguration(AssociationConfigurationView):
 
         bot = self.bot
         sett = await bot.settings.find_by_id(guild_id)
+        if not sett.get("infractions"):
+            sett["infractions"] = {}
         sett["infractions"]["channel"] = select.values[0].id
         await bot.settings.update_by_id(sett)
         await config_change_log(
@@ -7062,6 +7111,35 @@ class InfractionsConfiguration(AssociationConfigurationView):
         )
 
     
+    @discord.ui.select(
+        cls=discord.ui.ChannelSelect,
+        placeholder="Promotions Channel",
+        row=2,
+        max_values=1,
+        channel_types=[discord.ChannelType.text],
+    )
+    async def promo_channel_select(
+        self, interaction: discord.Interaction, select: discord.ui.Select
+    ):
+        value = await self.interaction_check(interaction)
+        if not value:
+            return
+
+        await interaction.response.defer()
+        guild_id = interaction.guild.id
+
+        bot = self.bot
+        sett = await bot.settings.find_by_id(guild_id)
+        if not sett.get("promotions"):
+            sett["promotions"] = {}
+        sett["promotions"]["channel"] = select.values[0].id
+        await bot.settings.update_by_id(sett)
+        await config_change_log(
+            bot,
+            interaction.guild,
+            interaction.user,
+            f"Promotions Channel has been set to <#{select.values[0].id}>.",
+        )    
 
 class ERMCommandLog(AssociationConfigurationView):
     def __init__(self, *args, **kwargs):
