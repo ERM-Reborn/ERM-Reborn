@@ -1082,13 +1082,13 @@ class Configuration(commands.Cog):
                 discord.Embed(
                     title="Staff Management",
                     description=(
-                        "**What is staff management?** Staff management is a set of modules in order to make adjustments to your staff team. "
-                        "### Infractions"
+                        "**What is staff management?** Staff management is a set of modules in order to make adjustments to your staff team.\n\n"
+                        "### Infractions\n"
                         "**What are infractions?** Infractions are moderations for staff, where their rank may be changed, or they are warned or striked.\n\n"
                         "**Infraction channel:** This channel is where infraction notices are sent. Leave blank to disable sending to a channel.\n\n"
-                        "### Promotions"
-                        "**What are promotions?** Promotions are moving a staff member to a role higher than their current one."
-                        "**Promotion channel:** This channel is where promotion messages are sent. Leave blank to disable sending to a channel."
+                        "### Promotions\n"
+                        "**What are promotions?** Promotions are moving a staff member to a role higher than their current one.\n\n"
+                        "**Promotion channel:** This channel is where promotion messages are sent. Leave blank to disable sending to a channel\n\n."
                     ),
                     color=blank_color,
                 ),
