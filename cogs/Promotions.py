@@ -454,7 +454,7 @@ class Promotions(commands.Cog):
             await ctx.send(
                 embed=discord.Embed(
                     title=f"{self.bot.emoji_controller.get_emoji('success')} Promotion Revoked",
-                    description="Successfully promotion the infraction!",
+                    description="Successfully revoked the promotion!",
                     color=discord.Color.green(),
                 )
             )
