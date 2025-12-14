@@ -18,12 +18,12 @@ class Actions(commands.Cog):
         self.bot: commands.Bot = bot
 
     @commands.hybrid_group(
-        name="actions", description="Manage your ERM.lite Actions easily."
+        name="actions", description="Manage your ERM-Reborn Actions easily."
     )
     async def actions(self, ctx: commands.Context):
         pass
 
-    @actions.command(name="manage", description="Manage your ERM.lite Actions easily.")
+    @actions.command(name="manage", description="Manage your ERM-Reborn Actions easily.")
     @is_admin()
     async def actions_manage(self, ctx: commands.Context):
         await log_command_usage(self.bot, ctx.guild, ctx.author, f"Actions Manage")
@@ -76,7 +76,7 @@ class Actions(commands.Cog):
         if timeout:
             return
 
-    @actions.command(name="execute", description="Execute an ERM.lite Action in your server")
+    @actions.command(name="execute", description="Execute an ERM-Reborn Action in your server")
     @is_staff()
     @app_commands.autocomplete(action=action_autocomplete)
     async def action_execute(self, ctx: commands.Context, *, action: str):

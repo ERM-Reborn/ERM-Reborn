@@ -61,7 +61,7 @@ class ActivityMonitoring(commands.Cog):
             return await ctx.send(
                 embed=discord.Embed(
                     title="Invalid Time",
-                    description="This time format is not accepted by ERM.lite. Please seek the documentation for details",
+                    description="This time format is not accepted by ERM-Reborn. Please seek the documentation for details",
                     color=BLANK_COLOR,
                 )
             )

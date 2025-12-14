@@ -67,7 +67,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         bot = self.bot
@@ -177,7 +177,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         settings = await self.bot.settings.find_by_id(ctx.guild.id)
@@ -460,7 +460,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
         try:
             maximum_staff = settings.get("shift_management", {}).get("maximum_staff", 0)
@@ -621,7 +621,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         bot = self.bot
@@ -843,7 +843,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         bot = self.bot
@@ -1344,7 +1344,7 @@ class ShiftLogging(commands.Cog):
             return await new_failure_embed(
                 ctx,
                 "Maintenance",
-                "This command is currently disabled as ERM.lite is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
+                "This command is currently disabled as ERM-Reborn is currently undergoing maintenance updates. This command will be turned off briefly to ensure that no data is lost during the maintenance.",
             )
 
         bot = self.bot

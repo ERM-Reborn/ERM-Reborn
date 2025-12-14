@@ -632,7 +632,7 @@ elif environment == "ALPHA":
         bot_token = config("ALPHA_BOT_TOKEN")
     except decouple.UndefinedValueError:
         bot_token = ""
-    logging.info("Using ERM.lite V4 Alpha token...")
+    logging.info("Using ERM-Reborn V4 Alpha token...")
 elif environment == "CUSTOM":
     bot_token = config("CUSTOM_BOT_TOKEN")
     logging.info("Using custom bot token...")

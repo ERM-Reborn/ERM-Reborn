@@ -214,9 +214,9 @@ class Tickets(commands.Cog):
             ],
         )
         embed = discord.Embed(
-            title = "ERM.lite Ticketing",
+            title = "ERM-Reborn Ticketing",
             description=(
-                "ERM.lite introduces a new feature to the ERM ecosystem - tickets.\n\n"
+                "ERM-Reborn introduces a new feature to the ERM ecosystem - tickets.\n\n"
                 "In this area, you are able to enable tickets, and configure ticket categories.\n"
                 "For each ticket category, you are capable to configure the allowed access roles for them.\n\n"
                 "**Enabled**: Enable the ticket integration\n"
