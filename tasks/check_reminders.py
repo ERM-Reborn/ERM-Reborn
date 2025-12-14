@@ -130,7 +130,8 @@ async def iterate_reminder(bot, guildObj): # TODO: do a refactor of this.. this 
                 )
 
             try:
-                panel_url_var = config("PANEL_API_URL")
+                pass
+                '''panel_url_var = config("PANEL_API_URL")
                 if panel_url_var not in ["", None]:
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
@@ -143,7 +144,7 @@ async def iterate_reminder(bot, guildObj): # TODO: do a refactor of this.. this 
                                 },
                                 json={"message": item["message"]},
                         ):
-                            pass
+                            pass'''
             except Exception as e:
                 logging.warning(f"Failed to trigger reminder: {e}")
 

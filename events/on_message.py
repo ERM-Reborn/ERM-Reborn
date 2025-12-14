@@ -556,7 +556,7 @@ class OnMessage(commands.Cog):
                                 )
                             except KeyError:
                                 embed.set_footer(
-                                    text=f"Thanks, ERM.lite",
+                                    text=f"Thanks, ERM-Reborn",
                                     icon_url=get_guild_icon(bot, message.guild),
                                 )
 
@@ -595,7 +595,7 @@ class OnMessage(commands.Cog):
                                 )
                             except KeyError:
                                 embed.set_footer(
-                                    text=f"Thanks, ERM.lite",
+                                    text=f"Thanks, ERM-Reborn",
                                     icon_url=get_guild_icon(bot, message.guild),
                                 )
 

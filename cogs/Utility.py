@@ -104,16 +104,16 @@ class Utility(commands.Cog):
     @commands.hybrid_command(
         name="about",
         aliases=["info"],
-        description="Information about ERM.lite",
+        description="Information about ERM-Reborn",
         extras={"category": "Utility"},
     )
     async def about(self, ctx):
         # using an embed
         # [**Support Server**](https://discord.gg/5pMmJEYazQ)
         embed = discord.Embed(
-            title="About ERM.lite",
+            title="About ERM-Reborn",
             color=BLANK_COLOR,
-            description="ERM.lite is the all-in-one approach to game moderation logging, shift logging and more.",
+            description="ERM-Reborn is the all-in-one approach to game moderation logging, shift logging and more.",
         )
 
 

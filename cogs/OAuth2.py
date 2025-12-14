@@ -13,7 +13,7 @@ class OAuth2(commands.Cog):
 
     @commands.hybrid_command(
         name="link",
-        description="Link your Roblox account with ERM.lite.",
+        description="Link your Roblox account with ERM-Reborn.",
         extras={"ephemeral": True},
     )
     async def link_roblox(self, ctx: commands.Context):
@@ -45,8 +45,8 @@ class OAuth2(commands.Cog):
         timestamp = time.time()
         verification_message = {
             "embed": discord.Embed(
-                title="Verify with ERM.lite",
-                description="**To link your account with ERM.lite, click the button below.**\nIf you encounter an error, please contact ERM.lite Support by running `/support`.",
+                title="Verify with ERM-Reborn",
+                description="**To link your account with ERM-Reborn, click the button below.**\nIf you encounter an error, please contact ERM-Reborn Support by running `/support`.",
                 color=BLANK_COLOR,
             ),
             "view": AccountLinkingMenu(self.bot, ctx.author, ctx.interaction),
@@ -70,7 +70,7 @@ class OAuth2(commands.Cog):
                     await msg.edit(
                         embed=discord.Embed(
                             title=f"{self.bot.emoji_controller.get_emoji('success')} Linked",
-                            description="Your Roblox account has been successfully linked to ERM.lite.",
+                            description="Your Roblox account has been successfully linked to ERM-Reborn.",
                             color=GREEN_COLOR,
                         )
                     )
@@ -83,7 +83,7 @@ class OAuth2(commands.Cog):
                         await msg.edit(
                             embed=discord.Embed(
                                 title=f"{self.bot.emoji_controller.get_emoji('success')} Linked",
-                                description="Your Roblox account has been successfully linked to ERM.lite.",
+                                description="Your Roblox account has been successfully linked to ERM-Reborn.",
                                 color=GREEN_COLOR,
                             )
                         )
