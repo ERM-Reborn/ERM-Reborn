@@ -9,7 +9,7 @@ class OnLOAAccept(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_loa_accept(self, s_loa: dict, role_ids: list[int], accepted_by: int):
+    async def on_loa_accept(self, s_loa: dict, role_ids: list[int], accepted_by: int, from_web: bool):
         guild = self.bot.get_guild(s_loa["guild_id"])
         try:
             user = await guild.fetch_member(int(s_loa["user_id"]))
@@ -75,10 +75,10 @@ class OnLOAAccept(commands.Cog):
         )
 
         await messg.edit(embed=embed, view=None)
+        if not from_web:
+            view_item = await self.bot.views.db.find_one({"message_id": messg.id})
 
-        view_item = await self.bot.views.db.find_one({"message_id": messg.id})
-
-        await self.bot.views.delete_by_id(view_item["_id"])
+            await self.bot.views.delete_by_id(view_item["_id"])
 
 
 async def setup(bot):

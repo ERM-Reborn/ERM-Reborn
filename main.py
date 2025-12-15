@@ -1,3 +1,1 @@
-from erm import run
-
-run()
+from erm import run; run()

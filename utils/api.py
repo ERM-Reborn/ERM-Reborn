@@ -2,6 +2,7 @@ import asyncio
 import copy
 import datetime
 import typing
+import secrets
 from collections import defaultdict
 
 import aiohttp
@@ -14,6 +15,9 @@ import discord
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
+
+from utils.api_security import SecurityMiddleware, validate_authorization
+from utils.security import csrf_manager, rate_limiter, audit_logger
 
 from erm import (
     Bot,
@@ -57,26 +61,39 @@ async def check_rate_limit(identifier: str):
     
     _api_rate_limiter[identifier].append(now)
 
+
+async def apply_security_checks(request: Request, bot: Bot, authorization: str, endpoint_name: str) -> dict:
+    """Helper function to apply security checks to all protected endpoints"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Invalid authorization")
+
+    if not await validate_authorization(bot, authorization):
+        raise HTTPException(
+            status_code=401, detail="Invalid or expired authorization."
+        )
+
+    # Rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+    allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, endpoint_name)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+            headers={"Retry-After": str(rate_info["retry_after"])}
+        )
+
+    # CSRF validation for state-changing operations
+    csrf_token = request.headers.get("x-csrf-token")
+    if not csrf_token:
+        raise HTTPException(status_code=403, detail="Missing CSRF token")
+
+    return {"client_ip": client_ip, "auth_token": authorization}
+
+
 class Identification(BaseModel):
     license: typing.Optional[typing.Any]
     discord: typing.Optional[typing.Any]
     source: typing.Literal["fivem", "discord"]
-
-
-async def validate_authorization(bot: Bot, token: str, disable_static_tokens=False):
-    # Check static and dynamic tokens
-    if not disable_static_tokens:
-        static_token = config("API_STATIC_TOKEN")
-        if token == static_token:
-            return True
-    token_obj = await bot.api_tokens.db.find_one({"token": token})
-    if token_obj:
-        if int(datetime.datetime.now().timestamp()) < token_obj["expires_at"]:
-            return True
-        else:
-            return False
-    else:
-        return False
 
 
 class APIRoutes:
@@ -95,6 +112,54 @@ class APIRoutes:
                 ) 
     def GET_status(self):
         return {"guilds": len(self.bot.guilds), "ping": round(self.bot.latency * 1000)}
+
+    async def GET_csrf_token(self, request: Request):
+        """Get a CSRF token for state-changing operations"""
+        try:
+            print("DEBUG: GET_csrf_token called!")
+            logger.info("DEBUG: GET_csrf_token called!")
+            
+            # Extract session info from request (or generate new session)
+            session_id = request.headers.get("x-session-id", secrets.token_urlsafe(32))
+            user_id = request.headers.get("x-user-id", 0)
+            guild_id = request.headers.get("x-guild-id", 0)
+            
+            try:
+                user_id = int(user_id) if user_id else 0
+                guild_id = int(guild_id) if guild_id else 0
+            except (ValueError, TypeError):
+                user_id = 0
+                guild_id = 0
+            
+            print(f"DEBUG: session_id={session_id}, user_id={user_id}, guild_id={guild_id}")
+            print(f"DEBUG: csrf_manager.db={csrf_manager.db}")
+            logger.info(f"DEBUG: csrf_manager.db={csrf_manager.db}")
+            
+            # Initialize csrf_manager with bot's database if not already initialized
+            if csrf_manager.db is None:
+                print("DEBUG: Initializing csrf_manager.db from self.bot.db")
+                csrf_manager.db = self.bot.db
+            
+            logger.info(f"Generating CSRF token for session {session_id}, user {user_id}, guild {guild_id}")
+            
+            # Generate CSRF token
+            csrf_token = await csrf_manager.generate_token(session_id, user_id, guild_id)
+            
+            print(f"DEBUG: CSRF token generated: {csrf_token[:20]}...")
+            logger.info(f"CSRF token generated successfully: {csrf_token[:20]}...")
+            
+            return {
+                "token": csrf_token,
+                "session_id": session_id,
+                "expires_in": 3600
+            }
+        except Exception as e:
+            print(f"DEBUG ERROR: {e}")
+            print(f"DEBUG ERROR: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            logger.error(f"Error generating CSRF token: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to generate CSRF token: {str(e)}")
 
     async def POST_get_mutual_guilds(self, request: Request):
         json_data = await request.json()
@@ -167,6 +232,21 @@ class APIRoutes:
             raise HTTPException(
                 status_code=401, detail="Invalid or expired authorization."
             )
+
+        # Rate limiting
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, "approve_application")
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+                headers={"Retry-After": str(rate_info["retry_after"])}
+            )
+
+        # CSRF validation
+        csrf_token = request.headers.get("x-csrf-token")
+        if not csrf_token:
+            raise HTTPException(status_code=403, detail="Missing CSRF token")
 
         try:
             json_data = await request.json()
@@ -249,6 +329,22 @@ class APIRoutes:
                         status_code=400, detail=f"Error removing roles: {str(e)}"
                     )
 
+            # Audit logging
+            await audit_logger.log_action(
+                action_type="application_approved",
+                user_id=authorization,
+                guild_id=guild_id,
+                resource_type="application",
+                resource_id=str(user_id),
+                changes={
+                    "roles_added": add_role_ids,
+                    "roles_removed": remove_role_ids,
+                    "note": note
+                },
+                ip_address=client_ip,
+                status="success"
+            )
+
             return 200
 
         except ValueError as e:
@@ -270,6 +366,21 @@ class APIRoutes:
             raise HTTPException(
                 status_code=401, detail="Invalid or expired authorization."
             )
+
+        # Rate limiting
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, "deny_application")
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+                headers={"Retry-After": str(rate_info["retry_after"])}
+            )
+
+        # CSRF validation
+        csrf_token = request.headers.get("x-csrf-token")
+        if not csrf_token:
+            raise HTTPException(status_code=403, detail="Missing CSRF token")
 
         try:
             json_data = await request.json()
@@ -352,6 +463,22 @@ class APIRoutes:
                         status_code=400, detail=f"Error removing roles: {str(e)}"
                     )
 
+            # Audit logging
+            await audit_logger.log_action(
+                action_type="application_denied",
+                user_id=authorization,
+                guild_id=guild_id,
+                resource_type="application",
+                resource_id=str(user_id),
+                changes={
+                    "roles_added": add_role_ids,
+                    "roles_removed": remove_role_ids,
+                    "note": note
+                },
+                ip_address=client_ip,
+                status="success"
+            )
+
             return 200
 
         except ValueError as e:
@@ -366,13 +493,8 @@ class APIRoutes:
     async def POST_notify_new_application(
         self, authorization: Annotated[str | None, Header()], request: Request
     ):
-        if not authorization:
-            raise HTTPException(status_code=401, detail="Invalid authorization")
-
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+        security_info = await apply_security_checks(request, self.bot, authorization, "notify_new_application")
+        client_ip = security_info["client_ip"]
 
         json_data = await request.json()
         guild_id = json_data["guild_id"]
@@ -429,6 +551,75 @@ class APIRoutes:
         staff_request_id = json_data["document_id"]
         self.bot.dispatch("staff_request_send", ObjectId(staff_request_id))
         return {"op": 1, "code": 200}
+    
+    async def POST_create_staff_request(
+        self, authorization: Annotated[str | None, Header()], request: Request
+    ):
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Invalid authorization")
+        json_data = await request.json()
+        guild = int(json_data["guild"])
+        user = int(json_data["user"]["id"])
+        reason = json_data["reason"]
+        username = json_data["user"]["username"]
+        if not guild or not user:
+            return {"status": "invalid"}
+
+    
+        av = f"https://cdn.discordapp.com/{user}/{json_data["user"]["avatar"]}"
+        settings = await self.bot.settings.find_by_id(int(guild))
+        game_logging = settings.get("game_logging", {})        
+        staff_requests = game_logging.get("staff_requests", {})
+        last_submitted_staff_request = [
+            i
+            async for i in self.bot.staff_requests.db.find(
+                {"user_id": user, "guild_id": guild}
+            )
+            .sort({"_id": -1})
+            .limit(1)
+        ]
+        if len(last_submitted_staff_request) != 0:
+            last_submitted_staff_request = last_submitted_staff_request[0]
+            document_id: ObjectId = last_submitted_staff_request["_id"]
+            timestamp = document_id.generation_time.timestamp()
+            if (
+                timestamp + staff_requests.get("cooldown", 0)
+                > datetime.datetime.now(tz=pytz.UTC).timestamp()
+            ):
+                return {"status": 'cooldown'}
+
+        staff_clocked_in = await self.bot.shift_management.shifts.db.count_documents(
+            {"EndEpoch": 0, "Guild": guild}
+        )
+        if (
+            staff_requests.get("min_staff") is not None
+            and staff_requests.get("min_staff") > 0
+        ):
+            if staff_clocked_in <= staff_requests.get("min_staff", 0):
+                return {"status": 'too_low_staff'}
+
+        if (
+            staff_requests.get("max_staff") is not None
+            and staff_requests.get("max_staff") > 0
+        ):
+            if staff_clocked_in > staff_requests.get("max_staff", 0):
+                return {"status": 'maxplus'}
+
+        document = {
+            "user_id": int(user),
+            "guild_id": int(guild),
+            "username": username,
+            "avatar": av,
+            "reason": reason,
+            "active": True,
+            "created_at": datetime.datetime.now(tz=pytz.UTC),
+            "acked": [],
+        }
+        result = await self.bot.staff_requests.db.insert_one(document)
+        o_id = result.inserted_id
+        self.bot.dispatch("staff_request_send", o_id)
+        return {"op": 1, "code": 200}
+
 
     async def POST_send_priority_dm(
         self, authorization: Annotated[str | None, Header()], request: Request
@@ -539,12 +730,33 @@ class APIRoutes:
     async def POST_create_loa(
         self, authorization: Annotated[str | None, Header()], request: Request
     ):
+        logger.info(f"POST_create_loa: Authorization header = {authorization}")
+        logger.info(f"POST_create_loa: All headers = {dict(request.headers)}")
+        
         if not authorization:
+            logger.warning("POST_create_loa: Authorization header is missing!")
             raise HTTPException(status_code=401, detail="Invalid authorization")
+
         if not await validate_authorization(self.bot, authorization):
             raise HTTPException(
                 status_code=401, detail="Invalid or expired authorization."
             )
+
+        # Rate limiting
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, "create_loa")
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+                headers={"Retry-After": str(rate_info["retry_after"])}
+            )
+
+        # CSRF validation
+        csrf_token = request.headers.get("x-csrf-token")
+        if not csrf_token:
+            raise HTTPException(status_code=403, detail="Missing CSRF token")
+
         json_data = await request.json()
         guild_id = int(json_data.get("guild"))
         user_id = int(json_data.get("user"))
@@ -672,6 +884,22 @@ class APIRoutes:
         except Exception as e:
             logger.error(f"Error sending LOA to management channel: {e}")
 
+        # Audit logging
+        await audit_logger.log_action(
+            action_type="loa_created",
+            user_id=authorization,
+            guild_id=guild_id,
+            resource_type="loa",
+            resource_id=str(loa_doc["_id"]),
+            changes={
+                "reason": reason,
+                "start_type": start_type,
+                "end_date": end_date
+            },
+            ip_address=client_ip,
+            status="success"
+        )
+
         return {"status": "success", "_id": str(loa_doc["_id"]), "created_at": int(datetime.datetime.now().timestamp())}
 
     async def POST_send_loa(
@@ -679,11 +907,6 @@ class APIRoutes:
     ):
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
-
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
 
         json_data = await request.json()
         s_loa = json_data.get("loa")  # OID -> dict { loa spec }
@@ -798,6 +1021,21 @@ class APIRoutes:
                 status_code=401, detail="Invalid or expired authorization."
             )
 
+        # Rate limiting
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, "accept_loa")
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+                headers={"Retry-After": str(rate_info["retry_after"])}
+            )
+
+        # CSRF validation
+        csrf_token = request.headers.get("x-csrf-token")
+        if not csrf_token:
+            raise HTTPException(status_code=403, detail="Missing CSRF token")
+
         json_data = await request.json()
         s_loa = json_data.get("loa")  # oid -> dict { loa spec }
         accepted_by = json_data.get("accepted_by")
@@ -807,6 +1045,9 @@ class APIRoutes:
             raise HTTPException(
                 status_code=400, detail="This LOA has already been denied."
             )
+        
+        s_loa["accepted"] = True
+        await self.bot.loas.update(s_loa_item)
 
         # fetch the actual accept roles
         guild_id = s_loa["guild_id"]
@@ -816,7 +1057,21 @@ class APIRoutes:
         )
 
         self.bot.dispatch(
-            "loa_accept", s_loa=s_loa, role_ids=roles, accepted_by=accepted_by
+            "loa_accept", s_loa=s_loa, role_ids=roles, accepted_by=accepted_by, from_web=True
+        )
+        # Audit logging
+        await audit_logger.log_action(
+            action_type="loa_accepted",
+            user_id=authorization,
+            guild_id=s_loa.get("guild_id"),
+            resource_type="loa",
+            resource_id=str(s_loa.get("_id")),
+            changes={
+                "accepted_by": accepted_by,
+                "status": "accepted"
+            },
+            ip_address=client_ip,
+            status="success"
         )
 
         return 200
@@ -832,18 +1087,53 @@ class APIRoutes:
                 status_code=401, detail="Invalid or expired authorization."
             )
 
+        # Rate limiting
+        client_ip = request.client.host if request.client else "unknown"
+        allowed, rate_info = await rate_limiter.check_limit(hash(client_ip) % 10000, "deny_loa")
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded. Retry after {rate_info['retry_after']} seconds",
+                headers={"Retry-After": str(rate_info["retry_after"])}
+            )
+
+        # CSRF validation
+        csrf_token = request.headers.get("x-csrf-token")
+        if not csrf_token:
+            raise HTTPException(status_code=403, detail="Missing CSRF token")
+
         json_data = await request.json()
         s_loa = json_data.get("loa")
         denied_by = json_data.get("denied_by")
         reason = json_data.get("reason", "No reason provided.")
         s_loa_item = await self.bot.loas.find_by_id(s_loa)
         s_loa = s_loa_item
+                
+        s_loa["denied"] = True
+        await self.bot.loas.update(s_loa_item)
+
         if s_loa.get('accepted'):
             raise HTTPException(
                 status_code=400, detail="This LOA has already been accepted."
             )
 
-        self.bot.dispatch("loa_deny", s_loa=s_loa, denied_by=denied_by, reason=reason)
+        self.bot.dispatch("loa_deny", s_loa=s_loa, denied_by=denied_by, reason=reason, from_web=True)
+
+        # Audit logging
+        await audit_logger.log_action(
+            action_type="loa_denied",
+            user_id=authorization,
+            guild_id=s_loa.get("guild_id"),
+            resource_type="loa",
+            resource_id=str(s_loa.get("_id")),
+            changes={
+                "denied_by": denied_by,
+                "reason": reason,
+                "status": "denied"
+            },
+            ip_address=client_ip,
+            status="success"
+        )
 
         return 200
 
@@ -853,10 +1143,6 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
 
         json_data = await request.json()
         if not json_data.get("Channel"):
@@ -889,10 +1175,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         await check_rate_limit(f"all_members_{guild_id}")
 
@@ -941,10 +1224,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         json_data = await request.json()
         await secure_logging(
@@ -1042,6 +1322,7 @@ class APIRoutes:
 
     async def POST_check_staff_level(self, request: Request):
         json_data = await request.json()
+        print(json_data)
         guild_id = json_data.get("guild")
         user_id = json_data.get("user")
 
@@ -1095,10 +1376,12 @@ class APIRoutes:
             if key == "guild":
                 continue
             if isinstance(value, dict):
-                settings = await self.bot.settings.find_by_id(guild_id)
+                settings = await self.bot.settings.find_by_id(int(guild_id))
                 if not settings:
                     return HTTPException(status_code=400, detail="Invalid guild")
                 for k, v in value.items():
+                    if v and k == "channel" and type(v) != int:
+                        v = int(v)
                     settings[key][k] = v
         await self.bot.settings.update_by_id(settings)
 
@@ -1248,13 +1531,46 @@ class APIRoutes:
             })
 
         return loas
-
-    async def POST_update_loa(
+    async def POST_get_guild_loas(
         self, request: Request
     ):
+        """Fetch LOA history for a specific user in a guild"""
+        json_data = await request.json()
+        guild_id = json_data.get("guild")
+
+        if not guild_id:
+            raise HTTPException(
+                status_code=400, detail="Missing 'guild' or 'user' parameter"
+            )
+
+        loas = []
+        # Query for LOAs belonging to this user and guild
+        async for loa_doc in self.bot.loas.db.find(
+            {"guild_id": int(guild_id)}
+        ).sort([("_id", -1)]):
+            loas.append({
+                "_id": str(loa_doc["_id"]),
+                "reason": loa_doc.get("reason"),
+                "type": loa_doc.get("type"),
+                "started_at": loa_doc.get("started_at"),
+                "expiry": loa_doc.get("expiry"),
+                "accepted": loa_doc.get("accepted"),
+                "denied": loa_doc.get("denied"),
+                "expired": loa_doc.get("expired"),
+            })
+
+        return loas
+    async def POST_update_loa(
+        self, request: Request, authorization: Annotated[str | None, Header()] = ""
+    ):
         """Update an LOA's end date"""
+        # Validate Authorization header
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Missing authorization header")
+
         json_data = await request.json()
         loa_id = json_data.get("loa_id")
+        print(loa_id)
         end_date = json_data.get("end_date")
 
         if not loa_id or not end_date:
@@ -1264,24 +1580,32 @@ class APIRoutes:
 
         try:
             from bson import ObjectId
-            loa_doc = await self.bot.loas.db.find_one({"_id": ObjectId(loa_id)})
+            loa_doc = await self.bot.loas.db.find_one({"_id": loa_id})
             if not loa_doc:
                 raise HTTPException(status_code=404, detail="LOA not found")
 
-            # Update the end date
+            # Update the end date and check if it's in the past
+            end_date_int = int(end_date)
+            expired = end_date_int <= int(datetime.datetime.now().timestamp())
+            
             await self.bot.loas.db.update_one(
-                {"_id": ObjectId(loa_id)},
-                {"$set": {"expiry": int(end_date)}}
+                {"_id": loa_id},
+                {"$set": {"expiry": end_date_int, "expired": expired}}
             )
 
             return {"status": "success", "message": "LOA updated successfully"}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update LOA: {str(e)}")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid end_date format")
+
 
     async def POST_end_loa(
-        self, request: Request
+        self, request: Request, authorization: Annotated[str | None, Header()] = ""
     ):
         """End an active LOA"""
+        # Validate Authorization header
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Missing authorization header")
+
         json_data = await request.json()
         loa_id = json_data.get("loa_id")
 
@@ -1292,15 +1616,22 @@ class APIRoutes:
 
         try:
             from bson import ObjectId
-            loa_doc = await self.bot.loas.db.find_one({"_id": ObjectId(loa_id)})
+            loa_doc = await self.bot.loas.db.find_one({"_id": loa_id})
             if not loa_doc:
                 raise HTTPException(status_code=404, detail="LOA not found")
 
             # Mark as expired and set the expiry to now
+            now = int(datetime.datetime.now().timestamp())
             await self.bot.loas.db.update_one(
-                {"_id": ObjectId(loa_id)},
-                {"$set": {"expired": True, "expiry": int(datetime.datetime.now().timestamp())}}
+                {"_id": loa_id},
+                {"$set": {"expired": True, "expiry": now}}
             )
+
+            # Dispatch event so bot can react to LOA ending
+            try:
+                self.bot.dispatch("loa_end", loa_doc)
+            except Exception as e:
+                logger.exception("Failed to dispatch loa_end event: %s", e)
 
             return {"status": "success", "message": "LOA ended successfully"}
         except Exception as e:
@@ -1383,8 +1714,10 @@ class APIRoutes:
         has_token = await self.bot.api_tokens.find_by_id(request.client.host)
         if has_token:
             if not int(datetime.datetime.now().timestamp()) > has_token["expires_at"]:
+                logger.info(f"GET_get_token: Returning existing token for {request.client.host}")
                 return has_token
-        # # # print(request)
+        
+        logger.info(f"GET_get_token: Generating new token for {request.client.host}")
         generated = tokenGenerator()
         object = {
             "_id": request.client.host,
@@ -1393,7 +1726,9 @@ class APIRoutes:
             "expires_at": int(datetime.datetime.now().timestamp()) + 2.592e6,
         }
 
+        logger.info(f"GET_get_token: Storing token object: {object}")
         await self.bot.api_tokens.upsert(object)
+        logger.info(f"GET_get_token: Token stored, returning: {object}")
 
         return object
 
@@ -1822,12 +2157,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(
-            self.bot, authorization, disable_static_tokens=False
-        ):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         token_obj = await self.bot.api_tokens.db.find_one({"token": authorization})
 
@@ -1897,10 +2227,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         guild = self.bot.get_guild(guild_id)
 
@@ -1933,13 +2260,8 @@ class APIRoutes:
     async def POST_issue_infraction(
         self, authorization: Annotated[str | None, Header()], request: Request
     ):
-        if not authorization:
-            raise HTTPException(status_code=401, detail="Invalid authorization")
-
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+        security_info = await apply_security_checks(request, self.bot, authorization, "issue_infraction")
+        client_ip = security_info["client_ip"]
 
         try:
             json_data = await request.json()
@@ -2067,10 +2389,6 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
 
         try:
             json_data = await request.json()
@@ -2120,10 +2438,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         try:
             json_data = await request.json()
@@ -2253,10 +2568,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         try:
             json_data = await request.json()
@@ -2323,10 +2635,7 @@ class APIRoutes:
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
-        if not await validate_authorization(self.bot, authorization):
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired authorization."
-            )
+
 
         try:
             json_data = await request.json()
@@ -2457,7 +2766,8 @@ class ServerAPI(commands.Cog):
 
     async def start_server(self):
         try:
-            # middleware = MyMiddleware(bot=self.bot)
+            # IMPORTANT: Add CORS FIRST so it wraps everything else
+            # Middleware is applied in reverse order, so last added runs first
             api.add_middleware(
                 CORSMiddleware,
                 allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -2465,6 +2775,8 @@ class ServerAPI(commands.Cog):
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
+            # Add SecurityMiddleware AFTER CORS so CORS headers are applied first
+            api.add_middleware(SecurityMiddleware, db=self.bot.db)
             api.include_router(APIRoutes(self.bot).router)
             self.config = uvicorn.Config(
                 "utils.api:api", port=int(config("BIND_PORT", default=5000)), log_level="debug", host="0.0.0.0"

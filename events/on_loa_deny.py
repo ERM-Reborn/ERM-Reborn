@@ -10,7 +10,7 @@ class OnLOADeny(commands.Cog):
 
     @commands.Cog.listener()
     async def on_loa_deny(
-        self, s_loa: dict, denied_by: int, reason: str = "No reason provided."
+        self, s_loa: dict, denied_by: int, reason: str = "No reason provided.", from_web: bool = False
     ):
         guild = self.bot.get_guild(s_loa["guild_id"])
         try:
@@ -60,9 +60,9 @@ class OnLOADeny(commands.Cog):
         )
 
         await messg.edit(embed=embed, view=None)
-
-        view_item = await self.bot.views.db.find_one({"message_id": messg.id})
-        await self.bot.views.delete_by_id(view_item.id)
+        if not from_web:
+            view_item = await self.bot.views.db.find_one({"message_id": messg.id})
+            await self.bot.views.delete_by_id(view_item.id)
 
 
 async def setup(bot):
