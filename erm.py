@@ -400,9 +400,9 @@ async def AutoDefer(ctx: commands.Context):
         if ctx.command.extras.get("ephemeral") is True:
             if ctx.interaction:
                 return await ctx.defer(ephemeral=True)
-        if ctx.command.extras.get("ignoreDefer") is True:
-            return
-        await ctx.defer()
+        if ctx.command.extras.get("defer") is True:
+            await ctx.defer()
+        
 
 
 @bot.after_invoke
@@ -691,4 +691,5 @@ def run():
 
 # We don't need if name == main because you should run from main.py
 run()
+
 
