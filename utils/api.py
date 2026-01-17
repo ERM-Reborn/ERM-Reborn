@@ -97,12 +97,12 @@ class APIRoutes:
         return {"guilds": len(self.bot.guilds), "ping": round(self.bot.latency * 1000)}
 
 
-    async def POST_login(self, authorization: Annotated[str | None, Header()], request: Request):
+    async def POST_generate_token(self, authorization: Annotated[str | None, Header()], request: Request):
         try:
             json_data: dict = await request.json()
             auth = json_data.get("code")
             if not auth:
-                return HTTPException(401, "No token provided for login")
+                raise HTTPException(401, "No token provided for login")
             scopes = json_data.get("scopes", 'identity guilds')
             async with aiohttp.ClientSession(raise_for_status=True) as session:
                 resp: aiohttp.ClientResponse = await session.post("https://discord.com/api/v10/oauth2/token", body={
@@ -118,7 +118,7 @@ class APIRoutes:
 
                 status = str(resp.status)
                 if not status.startswith("2"):
-                    return HTTPException(401, "Failed to authenticate")
+                    raise HTTPException(401, "Failed to authenticate")
                 access_token = resp.json()["access_token"]
 
                 userinfo: aiohttp.ClientResponse = await session.post("https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bearer {access_token}"})
@@ -132,7 +132,24 @@ class APIRoutes:
                 data = await self._get_web_token(query_js)
 
             return data
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid data format: {str(e)}"
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Internal server error: {str(e)}"
+            )
+    async def POST_login(self, authorization: Annotated[str | None, Header()]):
+        try:
+            if not authorization:
+                raise HTTPException(400, "No authentication provided")
+            valid = await validate_authorization(self.bot, authorization)
+            if not valid:
+                raise HTTPException(401, "Invalid authentication")
+            return 200
 
+            
         except ValueError as e:
             raise HTTPException(
                 status_code=400, detail=f"Invalid data format: {str(e)}"
