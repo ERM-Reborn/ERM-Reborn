@@ -6151,7 +6151,21 @@ class TicketDropDown(discord.ui.Select):
             discord.SelectOption(label = category["name"], value = category["id"], description = f"{category["name"]} ticket.")
             for category in ticket_settings["categories"]
         ])
+    async def interaction_check(self, interaction: discord.Interaction):
+        tickets = any([ticket["user_id"] == interaction.user.id for ticket in self.bot.tickets.get_all])
+        if tickets:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title = "Already open",
+                    description = "You already have a ticket open. Close that first"
+                )
+            )
+            return False
+        return True
+            
+
     async def callback(self, interaction: discord.Interaction):
+        
         sett = await self.bot.settings.find_by_id(interaction.guild.id)
         category = next(d for i, d in enumerate(sett["tickets"].get("categories")) if d["id"] == int(self.values[0]))
         overwrites = {

@@ -183,6 +183,7 @@ class Bot(commands.AutoShardedBot):
             self.custom_flags = CustomFlags(self.db, "custom_flags")
             self.views = Views(self.db, "views")
             self.api_tokens = APITokens(self.db, "api_tokens")
+            self.web_tokens = Document(self.db, "web_tokens")
             self.link_strings = LinkStrings(self.db, "link_strings")
             self.fivem_links = FiveMLinks(self.db, "fivem_links")
             self.consent = Consent(self.db, "consent")
@@ -368,7 +369,7 @@ async def AutoDefer(ctx: commands.Context):
         and config("CUSTOM_GUILD_ID", default=None) != 0
         and not getattr(ctx.bot, "whitelist_disabled", False)
     ):
-        if ctx.guild.id != int(config("CUSTOM_GUILD_ID")):
+        if ctx.guild.id != int(config("CUSTOM_GUILD_ID", default="0")):
             if ctx.interaction:
                 await ctx.interaction.response.send_message(
                     embed=discord.Embed(
@@ -443,7 +444,7 @@ async def on_message(
         and config("CUSTOM_GUILD_ID", default=None) != 0
         and not getattr(bot, "whitelist_disabled", False)
     ):
-        if message.guild.id != int(config("CUSTOM_GUILD_ID")):
+        if message.guild.id != int(config("CUSTOM_GUILD_ID", default="0")):
             ctx = await bot.get_context(message)
             if ctx.command is not None:
                 await message.reply(
