@@ -19,9 +19,10 @@ from jishaku.cog import STANDARD_FEATURES, OPTIONAL_FEATURES
 from jishaku.features.baseclass import Feature
 from erm import Bot
 from decouple import Config, RepositoryEnv
-# init config
+
+# Init config
 config = Config(RepositoryEnv('.env'))
-print(config("JISHAKU_OWNER"))
+
 OWNER = int(config("JISHAKU_OWNER"))
 LOGGING_CHANNEL = int(config("JISHAKU_LOGGING_CHANNEL"))
 
@@ -57,8 +58,7 @@ class CustomDebugCog(*OPTIONAL_FEATURES, *STANDARD_FEATURES):
         )
         embed.set_thumbnail(url=owner.display_avatar.url)
         await ctx.send(embed=embed)
-    # Let's just enable this
-    # @commands.Cog.listener()
+    
     async def cog_before_invoke(self, ctx: commands.Context):
         self.bot: Bot
         try:
