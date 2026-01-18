@@ -149,7 +149,6 @@ class APIRoutes:
                 raise HTTPException(401, "Invalid authentication")
             return 200
 
-            
         except ValueError as e:
             raise HTTPException(
                 status_code=400, detail=f"Invalid data format: {str(e)}"
@@ -239,7 +238,7 @@ class APIRoutes:
             submitted_on = json_data.get("submitted", 1)
             note = json_data.get("note", "Not provided.")
             application_name = json_data.get("application_name")
-
+            await check_rate_limit(f"approve_application_{guild_id}")
             guild = self.bot.get_guild(guild_id)
             if not guild:
                 raise HTTPException(status_code=400, detail="Invalid Guild ID")
@@ -342,7 +341,7 @@ class APIRoutes:
             submitted_on = json_data.get("submitted", 1)
             note = json_data.get("note", "Not provided.")
             application_name = json_data.get("application_name")
-
+            await check_rate_limit(f"deny_application_{guild_id}")
             guild = self.bot.get_guild(guild_id)
             if not guild:
                 raise HTTPException(status_code=400, detail="Invalid Guild ID")
@@ -479,6 +478,7 @@ class APIRoutes:
     async def POST_send_staff_request(
         self, authorization: Annotated[str | None, Header()], request: Request
     ):
+        
         if not authorization:
             raise HTTPException(status_code=401, detail="Invalid authorization")
 
@@ -489,6 +489,7 @@ class APIRoutes:
 
         json_data = await request.json()
         staff_request_id = json_data["document_id"]
+        await check_rate_limit(f"send_staff_request_{json_data["_id"]}")
         self.bot.dispatch("staff_request_send", ObjectId(staff_request_id))
         return {"op": 1, "code": 200}
 
@@ -614,7 +615,7 @@ class APIRoutes:
         start_type = json_data.get("start_type", "On Approval")
         start_date = json_data.get("start_date")  # Unix timestamp
         end_date = json_data.get("end_date")  # Unix timestamp
-
+        await check_rate_limit(f"create_loa_{user_id}_{guild_id}")
         logger.info(f"LOA Request: guild={guild_id}, user={user_id}, reason={reason}, start_type={start_type}, start_date={start_date}, end_date={end_date}")
 
         if not all([guild_id, user_id, reason, end_date]):
@@ -1140,6 +1141,9 @@ class APIRoutes:
     async def POST_get_guild_settings(self, request: Request):
         json_data = await request.json()
         guild_id = json_data.get("guild")
+
+        await check_rate_limit(f"get_settings_{guild_id}")
+
         if not guild_id:
             return HTTPException(status_code=400, detail="Invalid guild")
         guild: discord.Guild = self.bot.get_guild(int(guild_id))
@@ -1152,6 +1156,8 @@ class APIRoutes:
     async def POST_update_guild_settings(self, request: Request):
         json_data = await request.json()
         guild_id = json_data.get("guild")
+        
+        await check_rate_limit(f"update_settings_{guild_id}")
 
         for key, value in json_data.items():
             if key == "guild":
@@ -1201,22 +1207,6 @@ class APIRoutes:
             for channel in guild.channels
         ]
 
-    async def POST_get_last_warnings(self, request):
-        json_data = await request.json()
-        guild_id = json_data.get("guild")
-        # NOTE: This API is deprecated.
-        return HTTPException(status_code=500, detail="This API is deprecated")
-
-        # warning_objects = {}
-        # async for document in self.bot.warnings.db.find(
-        #         {"Guild": guild_id}
-        # ).sort([("$natural", -1)]).limit(10):
-        #     warning_objects[document["_id"]] = list(
-        #         filter(lambda x: x["Guild"] == guild_id, document["warnings"])
-        #     )
-
-        # return warning_objects
-
     async def POST_get_punishments(
         self, request: Request
     ):
@@ -1229,6 +1219,7 @@ class APIRoutes:
             raise HTTPException(status_code=400, detail="Missing 'guild' parameter")
 
         try:
+            await check_rate_limit(f"get_punishments_{guild_id}")
             infractions = []
             async for infraction in self.bot.db.infractions.find(
                 {"guild_id": int(guild_id), "revoked": {"$ne": True}}
@@ -1325,6 +1316,7 @@ class APIRoutes:
             )
 
         try:
+            await check_rate_limit(f"update_loa_{loa_id}")
             from bson import ObjectId
             loa_doc = await self.bot.loas.db.find_one({"_id": ObjectId(loa_id)})
             if not loa_doc:
@@ -1376,7 +1368,7 @@ class APIRoutes:
         guild_id = json_data.get("guild")
         user_id = json_data.get("user")
         shift_type = json_data.get("shift_type", "Default")
-
+        await check_rate_limit(f"start_shift_{user_id}_{guild_id}")
         if not guild_id or not user_id:
             raise HTTPException(
                 status_code=400, detail="Missing 'guild' or 'user' parameter"
@@ -2039,6 +2031,8 @@ class APIRoutes:
             original_infraction_type = json_data["infraction_type"]
             reason = json_data.get("reason", "No reason provided")
             issuer_id = json_data.get("issuer_id")
+            
+            await check_rate_limit(f"issue_infraction_{user_id}_{guild_id}")
 
             guild = self.bot.get_guild(guild_id)
             if not guild:
@@ -2418,7 +2412,7 @@ class APIRoutes:
             raise HTTPException(
                 status_code=401, detail="Invalid or expired authorization."
             )
-
+        
         try:
             json_data = await request.json()
             guild_id = int(json_data.get("guild_id"))
@@ -2490,7 +2484,6 @@ class APIRoutes:
             raise HTTPException(
                 status_code=500, detail=f"Internal server error: {str(e)}"
             )
-
 
 api = FastAPI()
 
