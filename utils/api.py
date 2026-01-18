@@ -157,6 +157,27 @@ class APIRoutes:
             raise HTTPException(
                 status_code=500, detail=f"Internal server error: {str(e)}"
             )
+    async def POST_logout(self, authorization: Annotated[str | None, Header()]):
+        try:
+            if not authorization:
+                raise HTTPException(400, "No authentication provided")
+            valid = await validate_authorization(self.bot, authorization)
+            if not valid:
+                raise HTTPException(401, "Invalid authentication")
+            
+            token_obj = await self.bot.web_tokens.db.find_one({"token": authorization})
+            await self.bot.web_tokens.delete(token_obj["_id"])
+            return 200
+            
+
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid data format: {str(e)}"
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Internal server error: {str(e)}"
+            )
     async def POST_get_mutual_guilds(self, request: Request):
         json_data = await request.json()
         guild_ids = json_data.get("guilds")

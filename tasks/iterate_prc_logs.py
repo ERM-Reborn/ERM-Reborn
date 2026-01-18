@@ -51,31 +51,31 @@ count_aggregate = global_aggregate + [{"$count": "total"}]
 
 URL = "https://avatar.roblox.com/v1/users/{}/avatar"
 COLORS = [1, 3, 5, 12, 18, 25, 36, 100, 105, 108, 121, 125, 128, 180, 191, 192, 217, 224, 225, 340, 341, 344, 346, 347, 353, 356, 361, 365, 1001, 1030]
+if config("AI_ENABLED"):
+    client = genai.Client(
+                api_key=config("GEMINI_API_KEY"),
+            )
 
-client = genai.Client(
-            api_key=config("GEMINI_API_KEY"),
-        )
+        
+    tools = [
+        types.Tool(googleSearch=types.GoogleSearch(
+        )),
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        thinking_config=types.ThinkingConfig(thinking_budget=1000),
+        tools=tools,
+        system_instruction=[
+            types.Part.from_text(text="""Note: Don't be too harsh (for example, a visor or the holo compass-like items is acceptable, but angel wings are not). Please be reasonable as well.
 
-    
-tools = [
-    types.Tool(googleSearch=types.GoogleSearch(
-    )),
-]
-generate_content_config = types.GenerateContentConfig(
-    thinking_config=types.ThinkingConfig(thinking_budget=1000),
-    tools=tools,
-    system_instruction=[
-        types.Part.from_text(text="""Note: Don't be too harsh (for example, a visor or the holo compass-like items is acceptable, but angel wings are not). Please be reasonable as well.
+    ONLY output the JSON format (do not send any other text, and indent):
 
-ONLY output the JSON format (do not send any other text, and indent):
-
-{
-    \"data\": {
-    \"flagged\": [each flagged item, id only] 
-}
-"""),
-    ],
-)
+    {
+        \"data\": {
+        \"flagged\": [each flagged item, id only] 
+    }
+    """),
+        ],
+    )
 async def iterate_prc_logs_global(bot):
     try:
         server_count = await bot.settings.db.aggregate(count_aggregate).to_list(1)
@@ -378,11 +378,12 @@ async def avatar_check(ids: list):
                             r["result"]["reasons"].append("Unrealistic Skin Tones")
 
                     # Secondly, we'll ask AI to analyse the current items and give us a response
-                    c = await check(r["result"]["current_items"])
-                    if c["flagged"]:
-                        r["result"]["unrealistic"] = True
-                        r["result"]["reasons"].append("Determined unrealistic avatar items")
-                        r["result"]["unrealistic_item_ids"] = check["flagged"]
+                    if config("AI_ENABLED"):
+                        c = await check(r["result"]["current_items"])
+                        if c["flagged"]:
+                            r["result"]["unrealistic"] = True
+                            r["result"]["reasons"].append("Determined unrealistic avatar items")
+                            r["result"]["unrealistic_item_ids"] = check["flagged"]
                     retu.append(r)
                     continue
     return {

@@ -101,14 +101,17 @@ async def rate_limited_fetch(coro, endpoint_type="default"):
 
 setup = False
 
+discord.utils.setup_logging(level=logging.INFO)
+
+
 try:
     sentry_url = config("SENTRY_URL")
     bloxlink_api_key = config("BLOXLINK_API_KEY")
 except decouple.UndefinedValueError:
+    logging.warning("No Sentry URL or BloxLink API key set!!! Set one or certain features will be broken.")
     sentry_url = ""
     bloxlink_api_key = ""
 
-discord.utils.setup_logging(level=logging.INFO)
 
 intents = discord.Intents.default()
 intents.message_content = True
