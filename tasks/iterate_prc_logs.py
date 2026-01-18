@@ -50,6 +50,8 @@ global_aggregate = [
 count_aggregate = global_aggregate + [{"$count": "total"}]
 
 URL = "https://avatar.roblox.com/v1/users/{}/avatar"
+
+# These are considered realistic colours.
 COLORS = [1, 3, 5, 12, 18, 25, 36, 100, 105, 108, 121, 125, 128, 180, 191, 192, 217, 224, 225, 340, 341, 344, 346, 347, 353, 356, 361, 365, 1001, 1030]
 if config("AI_ENABLED"):
     client = genai.Client(
@@ -377,7 +379,7 @@ async def avatar_check(ids: list):
                             r["result"]["unrealistic"] = True
                             r["result"]["reasons"].append("Unrealistic Skin Tones")
 
-                    # Secondly, we'll ask AI to analyse the current items and give us a response
+                    # Secondly, we'll ask AI to analyse the current items and give us a response. I was unable to get the worker from Noah.
                     if config("AI_ENABLED"):
                         c = await check(r["result"]["current_items"])
                         if c["flagged"]:
