@@ -1,7 +1,19 @@
+<img width="262" height="48" alt="image" src="https://github.com/user-attachments/assets/ecb83391-06cb-4dcb-ae37-81acfaaaafc0" />
+<h5>I dont think ERM staff like ERM-Reborn - this is a channel in the discord</h5>
+
+# DO NOT TOUCH REBORN
+I am no longer going to be working on ERM-Reborn, forever, and I have no intention to bring it back. I contribute to the actual ERM, so running ERM-Reborn is not a use to me. You should use the actual ERM present at https://github.com/mikeywhiston/erm - that actually now works and is getting updated constantly. ERM-Reborn is a security mess - from code that was (somehow) from AI to massive security flaws, this code should **NEVER BE USED IN A PRODUCTION ENVIRONMENT**, and no support will be given if you want to use it.
+
+<br><br><br><br><br><br><br><br><br><br><br><br>
+
+
+
 <p align="center">
   <img src="assets/erm-lite-logo.png" alt="ERM Bot Logo">
 </p>
 
+> [!CAUTION]
+> Using ERM-Reborn is at your own risk. No features have been updated since the shutdown, and no features will be updated with security fixes to make the bot more secure. Yet again, you should use the actual ERM present at https://github.com/mikeywhiston/erm. <br><br> If you _really_ want to even after these disclaimers, go ahead, but there will be **NO SUPPORT** if anything goes wrong.
 
 <h1 align="center">ERM-Reborn | Emergency Response Management Lite</h1>
 
